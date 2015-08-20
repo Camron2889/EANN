@@ -1,14 +1,20 @@
 ﻿var stage;
-var fAmount = 30; //amount of food kept on the canvas
-var fRadius = 8;
-var cRadius = 15; 
+var cWidth; var cHeight; //canvas width and height
+var timer; //setInterval reference
+var frameLength = 10; //tick duration in milliseconds
+
+var cRadius = 15; //default creature radius
 var cSpeed = 2; //creature speed in pixels per tick
+
+var population = []; //contains Creature instances
 var populationSize = 15;
-var population = [];
-var food = [];
-var cWidth; var cHeight;
-var generation = 0;
-var timer; var frameLength = 10;
+var generation = 0; //current generation
+
+var food = []; //contains Food instances
+var fAmount = 30; //amount of food kept on the canvas
+var fRadius = 8; //default food radius
+
+var inputNodes = 2; var hiddenNodes = 2; var outputNodes = 1; //default neural network parameters
 
 var ga = {
 
@@ -28,22 +34,33 @@ var cls = { //pseuso-classes
         this.closestAngle = 0;
         this.sprite;
     },
-    Food: function() {
+    Food: function () {
         this.x = Math.floor(Math.random() * cWidth);
         this.y = Math.floor(Math.random() * cHeight);
         this.sprite;
     },
     ANN: function () {
-        this.weights = [];
-        for (var i = 0; i < wts.length; i++) {
-            this.weights[i] = wts[i];
+        this.inputs = [];
+        for (var i = 0; i < inputNodes; i++) {
+            inputs[i] = 0;
+        };
+        this.hiddenNodes = [];
+        for (var i = 0; i < hiddenNodes; i++) {
+            hiddenNodes[i] = 0;
+            for (var i1 = 0; i1 < inputNodes; i1++) {
+                inputs[i][i1] = 1; //weights
+            }
+        }
+        this.outputs = [];
+        for (var i = 0; i < outputNodes; i++) {
+            hiddenNodes[i] = 0;
         }
     }
 };
 
 var physics = {
     moveCreature: function (cr) {
-        var x = (Math.sin(cr.rotation) / Math.sin((Math.PI * 180)/360)) / cr.speed;
+        var x = (Math.sin(cr.rotation) / Math.sin((Math.PI * 180) / 360)) / cr.speed;
         var y = (Math.sin(((Math.PI * 180) / 360) - cr.rotation) / Math.sin((Math.PI * 180) / 360)) / cr.speed;
         cr.x += x;
         cr.y += y;
@@ -65,12 +82,12 @@ var physics = {
             var x = population[i].x;
             var y = population[i].y;
             var x1; var y1; var mag;
-            for (var i1 = 0; i1 < food.length; i1++) {
+            for (var i1 = 0; i1 < food.length; i1++) { //check for overlaps between creatures and food
                 x1 = food[i1].x;
                 y1 = food[i1].y;
                 mag = Math.sqrt(((x - x1) * (x - x1)) + ((y - y1) * (y - y1)));
                 if (mag <= population[i].radius + fRadius) {
-                    stage.removeChild(food[i1].sprite);
+                    stage.removeChild(food[i1].sprite); //handle overlaps
                     var newFood = new cls.Food();
                     food.splice(i1, 1, newFood);
                     display.initFood(newFood);
@@ -109,7 +126,7 @@ var display = {
     }
 };
 
-var spawn = {
+var spawn = { //spawns objects at start of simulations
     Food: function () {
         for (var i = food.length; i < fAmount; i++) {
             food[i] = new cls.Food();
@@ -132,8 +149,8 @@ var spawn = {
     }
 };
 
-var time = {
-    Tick: function (displayBool) {
+var time = { //runs functions on tick
+    Tick: function (displayBool) { //displayBool: whether or not the simulation will be displayed
         physics.onTick();
         if (displayBool) {
             display.onTick();
@@ -141,7 +158,7 @@ var time = {
     }
 }
 
-var manage = {
+var manage = { //manages the state of the simulation
     startSim: function () {
         timer = setInterval(function () { time.Tick(true) }, frameLength);
     },
@@ -153,8 +170,8 @@ var manage = {
 }
 
 $(document).ready(function () {
-    $("#CanvasI").attr("width", $(window).width());
-    $("#CanvasI").attr("height", $(window).height()*2/3);
+    $("#CanvasI").attr("width", $(window).width()); //set canvas size
+    $("#CanvasI").attr("height", $(window).height() * 2 / 3);
     cWidth = $("#CanvasI").width(); cHeight = $("#CanvasI").height();
     stage = new createjs.Stage("CanvasI");
     var bg = new createjs.Shape();
